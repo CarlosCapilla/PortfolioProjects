@@ -154,3 +154,33 @@ where dea.continent is not null
 
 Select *
 From PercentPopulationVaccinated
+
+
+--Creating a temp table for the vaccinated people in spain
+
+Drop table if exists #poblacionvacunada
+create table #PoblacionVacunada
+(Continent nvarchar(255),
+location nvarchar(255),
+date datetime,
+population decimal,
+new_vaccinations decimal,
+Nºdevacunados decimal
+)
+
+Insert into #PoblacionVacunada
+SELECT dea.continent, dea.location, dea.date, dea.[ population], vac.new_vaccinations
+, Sum(cast(vac.new_vaccinations as int)) OVER (Partition by dea.location order by dea.location, dea.date)
+as Nºdevacunados
+FROM [Portfolio Project]..CovidDeaths$ dea
+join [Portfolio Project]..CovidVaccinations$ vac
+	on dea.location = vac.location 
+	and dea.date = vac.date
+where dea.continent is not null and vac.new_vaccinations is not null and dea.location = 'Spain'
+order by 2,3
+
+Select *, (Nºdevacunados/population)*100 as '% de vacunados'
+from #PoblacionVacunada 
+
+
+
